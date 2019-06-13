@@ -41,6 +41,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         tvCreate.setOnClickListener(this);
         btnLogin.setOnClickListener(this);
 
+        if(mAuth.getUid()!= null)
+            startActivity(new Intent(this, MainActivity.class));
+
     }
 
 
