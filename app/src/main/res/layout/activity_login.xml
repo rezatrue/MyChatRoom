@@ -8,8 +8,8 @@
     tools:context=".LoginActivity">
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="272dp"
+        android:layout_height="244dp"
         android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginTop="8dp"
@@ -34,14 +34,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:hint="Email"/>
+            android:text="rezatrue@gmail.com"
+            android:hint="Email" />
 
         <EditText
             android:id="@+id/login_pass"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:hint="Password"/>
+            android:text="123456"
+            android:hint="Password" />
 
         <Button
             android:id="@+id/btn_login"
@@ -55,6 +57,8 @@
             android:id="@+id/tv_create"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:paddingTop="15dp"
             android:text="Create new Account" />
 
     </LinearLayout>

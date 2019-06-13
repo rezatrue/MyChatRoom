@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "90619163549",
+    "firebase_url": "https://mychatroom-a6535.firebaseio.com",
+    "project_id": "mychatroom-a6535",
+    "storage_bucket": "mychatroom-a6535.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:90619163549:android:b6013df5aa4de7f4",
+        "android_client_info": {
+          "package_name": "com.rezatrue.mychatroom"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "90619163549-n2qctdrdekr2iltpahqm661ht5urcjkf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rezatrue.mychatroom",
+            "certificate_hash": "5e0614e7f2c93a7f902abf78dcb5b7ea16159772"
+          }
+        },
+        {
+          "client_id": "90619163549-43n10v7rrp24supbk9gm4s9g8auqke96.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCu87f5SLi8IUxF2b-SAFNWk0PUN8JIxfM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "90619163549-43n10v7rrp24supbk9gm4s9g8auqke96.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
