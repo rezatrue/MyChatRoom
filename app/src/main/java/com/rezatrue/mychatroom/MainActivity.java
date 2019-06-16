@@ -11,6 +11,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -31,9 +32,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, AbsListView.OnScrollListener {
 
     EditText etSms;
     Button btnSend;
@@ -75,62 +77,52 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         listView = findViewById(R.id.smslist);
 
         btnSend.setOnClickListener(this);
+        listView.setOnScrollListener(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
-            // Name, email address, and profile photo Url
             userName = user.getDisplayName();
             Log.d(": success : ", "user.getDisplayName()"+ userName);
             String email = user.getEmail();
             Log.d(": success : ", "user.getEmail()"+ email);
             Uri photoUrl = user.getPhotoUrl();
-            userImage = photoUrl.toString();
-            //Uri myUri = Uri.parse(mystring);
+            if(photoUrl!=null)userImage = photoUrl.toString();
             Log.d(": success : ", "user.getPhotoUrl()"+ photoUrl);
             // Check if user's email is verified
             boolean emailVerified = user.isEmailVerified();
             Log.d(": success : ", "user.isEmailVerified()"+ emailVerified);
-            // The user's ID, unique to the Firebase project. Do NOT use this value to
-            // authenticate with your backend server, if you have one. Use
-            // FirebaseUser.getIdToken() instead.
             String uid = user.getUid();
             Log.d(": success : ", "user.getUid()"+ uid);
-
         }
 
-
-
         root = FirebaseDatabase.getInstance().getReference().child("message");
-
-        root.addValueEventListener(new ValueEventListener() {
+        // display first few message if room is empty
+        root.limitToFirst(loadLimit).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                ArrayList<Message> messages = new ArrayList<>();
-                //ArrayList<String> chat_conversation = new ArrayList<>();
-                //String chat_msg, user_name;
+                if(messages!=null && messages.size()>=loadLimit) return;
+                messages = new ArrayList<>();
                 Iterator it = dataSnapshot.getChildren().iterator();
                 while (it.hasNext()) {
-                    Message message = ((DataSnapshot) it.next()).getValue(Message.class);
-                    messages.add(message);
-                    //SingleObject singleObject = ((DataSnapshot) it.next()).getValue(SingleObject.class);
-                    //user_name = singleObject.getName();
-                    //chat_msg = singleObject.getMsg();
-                    //chat_conversation.add(user_name + " : " + chat_msg);
+                    DataSnapshot snapshot = (DataSnapshot) it.next();
+                    if ((snapshot!=null) || (lastPostId!=null) || !lastPostId.equals(snapshot.getKey())){
+                        lastPostId = snapshot.getKey();
+                        Message message = snapshot.getValue(Message.class);
+                        messages.add(message);
+                    }
                 }
-                //ArrayAdapter<String> adapter = new ArrayAdapter<>(MainActivity.this, android.R.layout.simple_list_item_1, android.R.id.text1, chat_conversation);
-                MessageAdapter messageAdapter = new MessageAdapter(MainActivity.this, messages);
+                messageAdapter = new MessageAdapter(MainActivity.this, messages);
+                Log.d(":success: ", "List Size : "+ messages.size());
                 listView.setAdapter(messageAdapter);
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                Log.d(":success: ", "error msg : "+ databaseError.getMessage());
             }
         });
-
     }
 
 
@@ -160,4 +152,67 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
+    ArrayList<Message> messages;
+    MessageAdapter messageAdapter;
+    private int currentVisibleItemCount;
+    private int currentScrollState;
+    private int currentFirstVisibleItem;
+    private int totalItem;
+    private int loadLimit = 5;
+    @Override
+    public void onScrollStateChanged(AbsListView view, int scrollState) {
+        this.currentScrollState = scrollState;
+        this.isScrollCompleted();
+    }
+
+    @Override
+    public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+        this.currentFirstVisibleItem = firstVisibleItem;
+        this.currentVisibleItemCount = visibleItemCount;
+        this.totalItem = totalItemCount;
+    }
+
+    // for checking post is already dispalyed
+    private String lastPostId;
+
+    private void isScrollCompleted() {
+        if (totalItem - currentFirstVisibleItem == currentVisibleItemCount
+                && this.currentScrollState == SCROLL_STATE_IDLE) {
+            root.orderByKey().startAt(lastPostId).limitToFirst(loadLimit).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    Iterator it = dataSnapshot.getChildren().iterator();
+                    it.next(); // skip the last time add in list
+                    while (it.hasNext()) {
+                        DataSnapshot snapshot = (DataSnapshot) it.next();
+                        if(lastPostId.equals(snapshot.getKey())){
+                            return;
+                        }else {
+                            lastPostId = (snapshot.getKey());
+                            Message message = snapshot.getValue(Message.class);
+                            messages.add(message);
+                            Log.d(":success: ", "messages added : ");
+                        }
+
+                    }
+                    messageAdapter = new MessageAdapter(MainActivity.this, messages);
+                    Log.d(":success: ", "List Size : "+ messages.size());
+                    listView.setAdapter(messageAdapter);
+                }
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                }
+
+            });
+        }
+    }
+
+
+
 }
+
+
+
+
+
+

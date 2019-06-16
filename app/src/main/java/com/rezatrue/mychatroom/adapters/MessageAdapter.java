@@ -10,7 +10,9 @@ import android.widget.TextView;
 
 import com.rezatrue.mychatroom.R;
 import com.rezatrue.mychatroom.pojo.Message;
+import com.squareup.picasso.Picasso;
 
+import java.net.URL;
 import java.util.ArrayList;
 
 public class MessageAdapter extends ArrayAdapter<Message>{
@@ -52,7 +54,11 @@ public class MessageAdapter extends ArrayAdapter<Message>{
             result = convertView;
         }
         Message message = messages.get(position);
-        if(message.getImage()!=null)viewHolder.userIV.setImageURI(Uri.parse(message.getImage()));
+
+        if(message.getImage()!=null){
+            Uri myUri = Uri.parse(message.getImage());
+            Picasso.get().load(myUri).error(R.drawable.ic_person_black_48dp).into(viewHolder.userIV);
+        }
         viewHolder.userTV.setText(message.getName());
         viewHolder.timeTV.setText(message.getTime());
         viewHolder.msgTV.setText(message.getMsg());

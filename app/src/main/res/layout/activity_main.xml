@@ -58,7 +58,9 @@
         <ListView
             android:id="@+id/smslist"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:transcriptMode="alwaysScroll"
+            android:stackFromBottom="true">
 
         </ListView>
     </LinearLayout>
