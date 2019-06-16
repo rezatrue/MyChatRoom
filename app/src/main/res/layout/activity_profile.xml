@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<android.support.constraint.ConstraintLayout
+<ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,9 +8,11 @@
     android:layout_height="match_parent"
     tools:context=".ProfileActivity">
 
+
     <LinearLayout
-        android:layout_width="256dp"
-        android:layout_height="325dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+
         android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginTop="8dp"
@@ -19,6 +21,7 @@
         android:layout_marginBottom="8dp"
         android:orientation="vertical"
         android:padding="25dp"
+        android:layout_gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -32,10 +35,11 @@
 
         <ImageView
             android:id="@+id/user_pic"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:layout_gravity="center"
-            android:src="@drawable/ic_launcher_background" />
+            android:background="@drawable/while_border"
+            android:src="@drawable/ic_person_black_48dp" />
 
         <EditText
             android:id="@+id/user_name"
@@ -62,6 +66,4 @@
     </LinearLayout>
 
 
-
-
-</android.support.constraint.ConstraintLayout>
+</ScrollView>

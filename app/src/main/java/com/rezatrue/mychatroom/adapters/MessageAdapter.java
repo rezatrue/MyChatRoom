@@ -1,5 +1,6 @@
 package com.rezatrue.mychatroom.adapters;
 import android.content.Context;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -51,6 +52,7 @@ public class MessageAdapter extends ArrayAdapter<Message>{
             result = convertView;
         }
         Message message = messages.get(position);
+        if(message.getImage()!=null)viewHolder.userIV.setImageURI(Uri.parse(message.getImage()));
         viewHolder.userTV.setText(message.getName());
         viewHolder.timeTV.setText(message.getTime());
         viewHolder.msgTV.setText(message.getMsg());

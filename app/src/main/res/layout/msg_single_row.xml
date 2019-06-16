@@ -8,12 +8,12 @@
 
     <ImageView
         android:id="@+id/user_image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
         android:layout_marginStart="4dp"
         android:layout_marginLeft="4dp"
         android:layout_marginTop="4dp"
-        android:src="@drawable/ic_launcher_background"
+        android:src="@drawable/ic_person_black_48dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

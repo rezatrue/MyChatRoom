@@ -41,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     DatabaseReference root;
     String userName, userImage;
 
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater menuInflater = getMenuInflater();
@@ -86,7 +87,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             String email = user.getEmail();
             Log.d(": success : ", "user.getEmail()"+ email);
             Uri photoUrl = user.getPhotoUrl();
-            //userImage = photoUrl.toString();
+            userImage = photoUrl.toString();
             //Uri myUri = Uri.parse(mystring);
             Log.d(": success : ", "user.getPhotoUrl()"+ photoUrl);
             // Check if user's email is verified

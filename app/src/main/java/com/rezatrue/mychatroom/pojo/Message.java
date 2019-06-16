@@ -1,5 +1,7 @@
 package com.rezatrue.mychatroom.pojo;
 
+import android.net.Uri;
+
 public class Message {
 
     private String image;
