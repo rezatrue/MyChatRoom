@@ -8,11 +8,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.rezatrue.mychatroom.MainActivity;
 import com.rezatrue.mychatroom.R;
 import com.rezatrue.mychatroom.pojo.Message;
 import com.squareup.picasso.Picasso;
 
-import java.net.URL;
 import java.util.ArrayList;
 
 public class MessageAdapter extends ArrayAdapter<Message>{
@@ -62,7 +62,11 @@ public class MessageAdapter extends ArrayAdapter<Message>{
         viewHolder.userTV.setText(message.getName());
         viewHolder.timeTV.setText(message.getTime());
         viewHolder.msgTV.setText(message.getMsg());
-        viewHolder.seenTV.setText(message.getStatus());
+        if(message.getUid()== MainActivity.uid) {
+            viewHolder.seenTV.setText(message.getStatus());
+        }else{
+            viewHolder.seenTV.setText("");}
+
         return result;
     }
 }

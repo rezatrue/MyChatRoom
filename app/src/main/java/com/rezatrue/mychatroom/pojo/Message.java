@@ -1,6 +1,5 @@
 package com.rezatrue.mychatroom.pojo;
 
-import android.net.Uri;
 
 public class Message {
 
@@ -9,17 +8,18 @@ public class Message {
     private String msg;
     private String time;
     private String status;
-
+    private String uid; // msg seen
 
     public Message() {
     }
 
-    public Message(String image, String name, String msg, String time, String status) {
+    public Message(String image, String name, String msg, String time, String status, String uid) {
         this.image = image;
         this.name = name;
         this.msg = msg;
         this.time = time;
         this.status = status;
+        this.uid = uid;
     }
 
     public String getImage() {
@@ -61,4 +61,15 @@ public class Message {
     public void setStatus(String status) {
         this.status = status;
     }
+
+
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
+
+
 }

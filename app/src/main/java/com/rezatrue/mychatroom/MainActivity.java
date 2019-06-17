@@ -3,6 +3,7 @@ package com.rezatrue.mychatroom;
 import android.content.Intent;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -19,6 +20,7 @@ import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -35,14 +37,15 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, AbsListView.OnScrollListener {
+public class MainActivity extends AppCompatActivity
+        implements View.OnClickListener, AbsListView.OnScrollListener, ChildEventListener {
 
     EditText etSms;
     Button btnSend;
     ListView listView;
     DatabaseReference root;
     String userName, userImage;
-
+    public static String uid; // msg seen
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -94,36 +97,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // Check if user's email is verified
             boolean emailVerified = user.isEmailVerified();
             Log.d(": success : ", "user.isEmailVerified()"+ emailVerified);
-            String uid = user.getUid();
+            uid = user.getUid();
             Log.d(": success : ", "user.getUid()"+ uid);
         }
 
         root = FirebaseDatabase.getInstance().getReference().child("message");
-        // display first few message if room is empty
-        root.limitToFirst(loadLimit).addValueEventListener(new ValueEventListener() {
+        // display last few messages for the first time if any
+
+
+
+
+        root.orderByKey().limitToLast(loadLimit).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if(messages!=null && messages.size()>=loadLimit) return;
-                messages = new ArrayList<>();
+                if(messages == null) { messages = new ArrayList<>(); viewedPostId = new LinkedList<>();}
                 Iterator it = dataSnapshot.getChildren().iterator();
                 while (it.hasNext()) {
                     DataSnapshot snapshot = (DataSnapshot) it.next();
-                    if ((snapshot!=null) || (lastPostId!=null) || !lastPostId.equals(snapshot.getKey())){
-                        lastPostId = snapshot.getKey();
-                        Message message = snapshot.getValue(Message.class);
-                        messages.add(message);
+                    Message message = snapshot.getValue(Message.class);
+                    String postId = snapshot.getKey();
+                    viewedPostId.add(postId);
+                    if(message.getStatus() == "unseen" && message.getUid() != uid) {
+                        makeMessageSeen(postId); // msg seen
+                        message.setStatus("seen");
                     }
+                    messages.add(message);
                 }
                 messageAdapter = new MessageAdapter(MainActivity.this, messages);
                 Log.d(":success: ", "List Size : "+ messages.size());
                 listView.setAdapter(messageAdapter);
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.d(":success: ", "error msg : "+ databaseError.getMessage());
+
             }
         });
+
+        root.orderByKey().addChildEventListener(this);
+
     }
+
 
 
     @Override
@@ -148,10 +163,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         map2.put("msg", sms);
         map2.put("time", timeStamp);
         map2.put("status", "unseen");
+        map2.put("uid", uid); // msg seen
         msg_root.updateChildren(map2);
     }
 
+    public void makeMessageSeen(String msgKey){  // msg seen
+        DatabaseReference msg_root = root.child(msgKey);
+        Map<String, Object> map = new HashMap<>();
+        map.put("status", "seen");
+        msg_root.updateChildren(map);
+    }
 
+    LinkedList<String> viewedPostId;
     ArrayList<Message> messages;
     MessageAdapter messageAdapter;
     private int currentVisibleItemCount;
@@ -172,23 +195,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         this.totalItem = totalItemCount;
     }
 
-    // for checking post is already dispalyed
-    private String lastPostId;
 
     private void isScrollCompleted() {
         if (totalItem - currentFirstVisibleItem == currentVisibleItemCount
                 && this.currentScrollState == SCROLL_STATE_IDLE) {
-            root.orderByKey().startAt(lastPostId).limitToFirst(loadLimit).addListenerForSingleValueEvent(new ValueEventListener() {
+            root.orderByKey().startAt(viewedPostId.getLast()).limitToFirst(loadLimit).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     Iterator it = dataSnapshot.getChildren().iterator();
                     it.next(); // skip the last time add in list
                     while (it.hasNext()) {
                         DataSnapshot snapshot = (DataSnapshot) it.next();
-                        if(lastPostId.equals(snapshot.getKey())){
+                        if(viewedPostId.getLast().equals(snapshot.getKey())){
                             return;
                         }else {
-                            lastPostId = (snapshot.getKey());
+                            String postId = snapshot.getKey();
+                            viewedPostId.add(postId);
                             Message message = snapshot.getValue(Message.class);
                             messages.add(message);
                             Log.d(":success: ", "messages added : ");
@@ -207,8 +229,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    // for last/current messages
+    @Override
+    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+        Log.d(":success: ", "try to add new msg added : ");
+        // not to load data for the first time / allow addListenerForSingleValueEvent to load first
+        if(messages == null) return;
+        Log.d(":success: ", "new msg added : ");
+        Message message = dataSnapshot.getValue(Message.class);
+        String postId = dataSnapshot.getKey();
+        viewedPostId.add(postId);
+        if(message.getStatus() == "unseen" && message.getUid() != uid) {
+            makeMessageSeen(postId); // msg seen
+            message.setStatus("seen");
+        }
+        messages.add(message);
+        messageAdapter = new MessageAdapter(MainActivity.this, messages);
+        Log.d(":success: ", "List Size : "+ messages.size());
+        listView.setAdapter(messageAdapter);
+    }
 
+    @Override
+    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
+    }
+
+    @Override
+    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+    }
+
+    @Override
+    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+    }
+
+    @Override
+    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+    }
 }
 
 
