@@ -105,20 +105,26 @@ public class MainActivity extends AppCompatActivity
         // display last few messages for the first time if any
 
 
-
-
         root.orderByKey().limitToLast(loadLimit).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if(messages!=null && messages.size()>=loadLimit) return;
-                if(messages == null) { messages = new ArrayList<>(); viewedPostId = new LinkedList<>();}
+                if(messages == null) messages = new ArrayList<>();
                 Iterator it = dataSnapshot.getChildren().iterator();
+                DataSnapshot snapshot1 = (DataSnapshot) it.next();
+                Message message1 = snapshot1.getValue(Message.class);
+                firstViewedPostId = snapshot1.getKey();
+                if(message1.getStatus().equals("unseen") && !message1.getUid().equals(uid)) {
+                    makeMessageSeen(firstViewedPostId); // msg seen
+                    message1.setStatus("seen");
+                }
+                messages.add(message1);
+
                 while (it.hasNext()) {
                     DataSnapshot snapshot = (DataSnapshot) it.next();
                     Message message = snapshot.getValue(Message.class);
                     String postId = snapshot.getKey();
-                    viewedPostId.add(postId);
-                    if(message.getStatus() == "unseen" && message.getUid() != uid) {
+                    if(message.getStatus().equals("unseen") && !message.getUid().equals(uid)) {
                         makeMessageSeen(postId); // msg seen
                         message.setStatus("seen");
                     }
@@ -135,7 +141,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        root.orderByKey().addChildEventListener(this);
+        root.orderByKey().limitToLast(1).addChildEventListener(this);
 
     }
 
@@ -174,7 +180,7 @@ public class MainActivity extends AppCompatActivity
         msg_root.updateChildren(map);
     }
 
-    LinkedList<String> viewedPostId;
+    String firstViewedPostId;
     ArrayList<Message> messages;
     MessageAdapter messageAdapter;
     private int currentVisibleItemCount;
@@ -185,7 +191,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onScrollStateChanged(AbsListView view, int scrollState) {
         this.currentScrollState = scrollState;
-        this.isScrollCompleted();
+        this.isScrollUpCompleted(firstViewedPostId);
     }
 
     @Override
@@ -196,30 +202,40 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    private void isScrollCompleted() {
-        if (totalItem - currentFirstVisibleItem == currentVisibleItemCount
+    private void isScrollUpCompleted(final String previousKey) {
+//        Log.d(":success: ", "scrolling up : currentFirstVisibleItem - "
+//                + currentFirstVisibleItem + " currentVisibleItemCount - " + currentVisibleItemCount + " totalItem - " + totalItem);
+        if (currentFirstVisibleItem == 0
                 && this.currentScrollState == SCROLL_STATE_IDLE) {
-            root.orderByKey().startAt(viewedPostId.getLast()).limitToFirst(loadLimit).addListenerForSingleValueEvent(new ValueEventListener() {
+            Log.d(":success: ", "previousKey  " + previousKey );
+            root.orderByKey().endAt(previousKey).limitToFirst(loadLimit).addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    Iterator it = dataSnapshot.getChildren().iterator();
-                    it.next(); // skip the last time add in list
-                    while (it.hasNext()) {
-                        DataSnapshot snapshot = (DataSnapshot) it.next();
-                        if(viewedPostId.getLast().equals(snapshot.getKey())){
-                            return;
-                        }else {
-                            String postId = snapshot.getKey();
-                            viewedPostId.add(postId);
-                            Message message = snapshot.getValue(Message.class);
-                            messages.add(message);
-                            Log.d(":success: ", "messages added : ");
-                        }
 
+                    Iterator it = dataSnapshot.getChildren().iterator();
+
+                    int i = 0;
+                    DataSnapshot snapshot1 = (DataSnapshot) it.next();
+                    String currentFirstKey = snapshot1.getKey();
+                    if (!currentFirstKey.equals(previousKey)) {
+                        Message message1 = snapshot1.getValue(Message.class);
+                        messages.add(i, message1);
+                        i++;
+                        while (it.hasNext()) {
+                            DataSnapshot snapshot = (DataSnapshot) it.next();
+                            String currentKey = snapshot.getKey();
+                            Message message = snapshot.getValue(Message.class);
+                            if (currentKey.equals(previousKey)) break;
+                            Log.d(":success: ", "Data  " + message.getMsg() + "  : " + currentKey);
+                            messages.add(i, message);
+                            i++;
+                        }
+                        firstViewedPostId = currentFirstKey;
+                        messageAdapter = new MessageAdapter(MainActivity.this, messages);
+                        Log.d(":success: ", "List Size : " + messages.size());
+                        listView.setAdapter(messageAdapter);
                     }
-                    messageAdapter = new MessageAdapter(MainActivity.this, messages);
-                    Log.d(":success: ", "List Size : "+ messages.size());
-                    listView.setAdapter(messageAdapter);
+
                 }
                 @Override
                 public void onCancelled(DatabaseError databaseError) {
@@ -232,20 +248,19 @@ public class MainActivity extends AppCompatActivity
     // for last/current messages
     @Override
     public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-        Log.d(":success: ", "try to add new msg added : ");
+        Log.d(":success: ", "new msg ");
         // not to load data for the first time / allow addListenerForSingleValueEvent to load first
         if(messages == null) return;
-        Log.d(":success: ", "new msg added : ");
+        Log.d(":success: ", " : added : ");
         Message message = dataSnapshot.getValue(Message.class);
         String postId = dataSnapshot.getKey();
-        viewedPostId.add(postId);
-        if(message.getStatus() == "unseen" && message.getUid() != uid) {
+        if(message.getStatus().equals("unseen")  && !message.getUid().equals(uid) ) {
             makeMessageSeen(postId); // msg seen
             message.setStatus("seen");
         }
         messages.add(message);
         messageAdapter = new MessageAdapter(MainActivity.this, messages);
-        Log.d(":success: ", "List Size : "+ messages.size());
+        Log.d(":success: ", "List Size : "+ messages.size() + " viewPostID : " + firstViewedPostId);
         listView.setAdapter(messageAdapter);
     }
 

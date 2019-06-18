@@ -62,7 +62,7 @@ public class MessageAdapter extends ArrayAdapter<Message>{
         viewHolder.userTV.setText(message.getName());
         viewHolder.timeTV.setText(message.getTime());
         viewHolder.msgTV.setText(message.getMsg());
-        if(message.getUid()== MainActivity.uid) {
+        if(message.getUid().equals(MainActivity.uid)) {
             viewHolder.seenTV.setText(message.getStatus());
         }else{
             viewHolder.seenTV.setText("");}
